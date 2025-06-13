@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Boston House Price Predictor</title>
+  <style>
+    :root {
+      --primary: #e67e22;
+      --secondary: #2c3e91;
+      --light: #ffffff;
+      --success: #3498db;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #fffaf5 0%, #e0ebff 100%);
+      color: var(--secondary);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background-color: var(--secondary);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .main-content {
+        flex-direction: row;
+        gap: 30px;
+      }
+
+      .form-container,
+      .result-container {
+        flex: 1;
+      }
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: var(--primary);
+      border-bottom: 2px solid var(--light);
+      padding-bottom: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .tooltip {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 15px;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #cf711a;
+    }
+
+    .prediction {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--primary);
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    .feature-importance {
+      margin-top: 20px;
+    }
+
+    .feature-importance h3 {
+      margin-bottom: 10px;
+      color: var(--secondary);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Boston House Price Predictor</h1>
+      <p>Enter property details to predict the house price</p>
+    </header>
+
+    <div class="main-content">
+      <div class="form-container card">
+        <h2>Enter Property Features</h2>
+        <form action="{{ url_for('predict') }}" method="post">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="CRIM">Crime Rate</label>
+              <input type="number" id="CRIM" name="CRIM" step="0.01" min="0" value="{{ CRIM if CRIM is defined else '0.02' }}" required />
+              <div class="tooltip">Per capita crime rate</div>
+            </div>
+
+            <div class="form-group">
+              <label for="ZN">Residential Zoning</label>
+              <input type="number" id="ZN" name="ZN" step="0.01" min="0" value="{{ ZN if ZN is defined else '18.0' }}" required />
+              <div class="tooltip">% of residential land zoned</div>
+            </div>
+
+            <div class="form-group">
+              <label for="INDUS">Industrial %</label>
+              <input type="number" id="INDUS" name="INDUS" step="0.01" min="0" value="{{ INDUS if INDUS is defined else '2.31' }}" required />
+              <div class="tooltip">% of non-retail business</div>
+            </div>
+
+            <div class="form-group">
+              <label for="CHAS">Charles River</label>
+              <input type="number" id="CHAS" name="CHAS" min="0" max="1" value="{{ CHAS if CHAS is defined else '0' }}" required />
+              <div class="tooltip">River dummy (1=bounds river)</div>
+            </div>
+
+            <div class="form-group">
+              <label for="NOX">Nitric Oxides</label>
+              <input type="number" id="NOX" name="NOX" step="0.001" min="0" value="{{ NOX if NOX is defined else '0.538' }}" required />
+              <div class="tooltip">Nitric oxides concentration</div>
+            </div>
+
+            <div class="form-group">
+              <label for="RM">Average Rooms</label>
+              <input type="number" id="RM" name="RM" step="0.01" min="0" value="{{ RM if RM is defined else '6.575' }}" required />
+              <div class="tooltip">Avg rooms per dwelling</div>
+            </div>
+
+            <div class="form-group">
+              <label for="AGE">Pre-1940 Units %</label>
+              <input type="number" id="AGE" name="AGE" step="0.01" min="0" value="{{ AGE if AGE is defined else '65.2' }}" required />
+              <div class="tooltip">% built before 1940</div>
+            </div>
+
+            <div class="form-group">
+              <label for="DIS">Employment Dist</label>
+              <input type="number" id="DIS" name="DIS" step="0.01" min="0" value="{{ DIS if DIS is defined else '4.09' }}" required />
+              <div class="tooltip">Distance to employment</div>
+            </div>
+
+            <div class="form-group">
+              <label for="RAD">Highway Access</label>
+              <input type="number" id="RAD" name="RAD" min="1" value="{{ RAD if RAD is defined else '1' }}" required />
+              <div class="tooltip">Highway accessibility index</div>
+            </div>
+
+            <div class="form-group">
+              <label for="TAX">Property Tax</label>
+              <input type="number" id="TAX" name="TAX" min="0" value="{{ TAX if TAX is defined else '296' }}" required />
+              <div class="tooltip">Tax rate per $10,000</div>
+            </div>
+
+            <div class="form-group">
+              <label for="PTRATIO">Pupil-Teacher</label>
+              <input type="number" id="PTRATIO" name="PTRATIO" step="0.1" min="0" value="{{ PTRATIO if PTRATIO is defined else '15.3' }}" required />
+              <div class="tooltip">Pupil-teacher ratio</div>
+            </div>
+
+            <div class="form-group">
+              <label for="B">Black Population</label>
+              <input type="number" id="B" name="B" step="0.01" min="0" value="{{ B if B is defined else '396.9' }}" required />
+              <div class="tooltip">Black population index</div>
+            </div>
+
+            <div class="form-group">
+              <label for="LSTAT">Lower Status %</label>
+              <input type="number" id="LSTAT" name="LSTAT" step="0.01" min="0" value="{{ LSTAT if LSTAT is defined else '4.98' }}" required />
+              <div class="tooltip">% lower status population</div>
+            </div>
+          </div>
+          <button type="submit">Predict Price</button>
+        </form>
+      </div>
+
+      <div class="result-container card">
+        <h2>Prediction Result</h2>
+
+        {% if prediction %}
+        <div class="prediction">{{ prediction }}</div>
+        <p style="text-align: center;">Estimated house price based on provided features</p>
+        {% else %}
+        <div class="prediction">-</div>
+        <p style="text-align: center;">Enter property details and click Predict Price</p>
+        {% endif %}
+
+        <div class="feature-importance">
+          <h3>Key Price Factors</h3>
+          <ul>
+            <li>Number of rooms (RM) - positive impact</li>
+            <li>Low-income population % (LSTAT) - negative impact</li>
+            <li>Air pollution (NOX) - negative impact</li>
+            <li>Distance to employment (DIS) - varies</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>Boston House Price Prediction Model | Linear Regression</p>
+    </footer>
+  </div>
+</body>
+</html>
